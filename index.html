@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rehab Planner">
+<meta id="themeColor" name="theme-color" content="#2563eb">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Rehab Planner</title>
+<style>
+/* ── Variables ── */
+:root {
+  --primary:#2563eb; --primary-d:#1d4ed8; --primary-l:#dbeafe;
+  --success:#16a34a; --success-l:#dcfce7;
+  --warn:#d97706;    --warn-l:#fef3c7;
+  --danger:#dc2626;  --danger-l:#fee2e2;
+  --rest:#8b5cf6;    --rest-l:#ede9fe;
+  --bg:#f1f5f9; --card:#fff; --border:#e2e8f0;
+  --text:#1e293b; --text2:#475569; --muted:#94a3b8;
+  --r:16px; --rs:10px;
+  --navH:64px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+[data-theme="dark"] {
+  --bg:#0f172a; --card:#1e293b; --border:#334155;
+  --text:#f1f5f9; --text2:#94a3b8; --muted:#475569;
+  --primary-l:#1e3a8a; --success-l:#14532d; --warn-l:#78350f; --rest-l:#4c1d95; --danger-l:#7f1d1d;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);font-size:16px;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh}
+
+/* ── Install Banner ── */
+#installBanner{background:var(--primary);color:#fff;padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+#installBanner.hidden{display:none}
+.ib-text{font-size:.82rem;line-height:1.3}
+.ib-text strong{display:block;font-size:.9rem}
+.ib-btns{display:flex;gap:6px;flex-shrink:0}
+.btn-ib{border:none;padding:7px 12px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer}
+.btn-install{background:#fff;color:var(--primary)}
+.btn-dismiss{background:rgba(255,255,255,.2);color:#fff}
+
+/* ── Header ── */
+#appHeader{background:var(--primary);color:#fff;
+  padding:calc(var(--safe-t) + 10px) 14px 10px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10}
+.hdr-title{font-size:.95rem;font-weight:700;letter-spacing:-.3px}
+.hdr-week{display:flex;align-items:center;gap:5px}
+.wk-btn{background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer}
+.wk-btn:active{background:rgba(255,255,255,.35)}
+#weekLabel{font-size:.78rem;font-weight:600;min-width:120px;text-align:center}
+.btn-today{background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 10px;
+  border-radius:50px;font-size:.75rem;font-weight:600;cursor:pointer}
+.btn-today:active{background:rgba(255,255,255,.35)}
+
+/* ── Day Tabs ── */
+#dayTabs{background:var(--primary);display:flex;overflow-x:auto;flex-shrink:0;
+  scrollbar-width:none;border-bottom:3px solid rgba(255,255,255,.15)}
+#dayTabs::-webkit-scrollbar{display:none}
+.dtab{display:flex;flex-direction:column;align-items:center;padding:6px 8px 8px;
+  cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-3px;
+  min-width:40px;transition:all .2s;flex:1;color:rgba(255,255,255,.6);user-select:none}
+.dtab.active{color:#fff;border-bottom-color:#fff;font-weight:700}
+.dtab-name{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px}
+.dtab-num{font-size:.95rem;font-weight:600;line-height:1.3}
+.dtab-dot{width:4px;height:4px;border-radius:50%;background:transparent;margin-top:2px}
+.dtab.today .dtab-dot{background:#fbbf24}
+.dtab.has-data .dtab-dot{background:rgba(255,255,255,.5)}
+.dtab.today.has-data .dtab-dot{background:#fbbf24}
+
+/* ── Main Content ── */
+#mainContent{flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:12px 12px calc(var(--navH) + var(--safe-b) + 12px);
+  -webkit-overflow-scrolling:touch}
+
+/* ── Cards ── */
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;
+  box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-title{font-size:.82rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--text2);display:flex;align-items:center;gap:6px}
+
+/* ── Day Summary Card ── */
+.day-card{background:linear-gradient(135deg,var(--primary-d),#3b82f6);color:#fff;
+  border-radius:var(--r);padding:16px;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between}
+.dc-info h2{font-size:1.15rem;font-weight:700}
+.dc-sub{font-size:.8rem;opacity:.8;margin-top:2px}
+.dc-acts{font-size:.8rem;opacity:.8;margin-top:6px}
+.circ{width:54px;height:54px;position:relative;flex-shrink:0}
+.circ svg{width:100%;height:100%;transform:rotate(-90deg)}
+.circ-track{fill:none;stroke:rgba(255,255,255,.25);stroke-width:5}
+.circ-fill{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .5s}
+.circ-pct{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-size:.72rem;font-weight:700}
+
+/* ── Rest Banner ── */
+.rest-banner{background:var(--rest-l);color:var(--rest);border-radius:var(--r);
+  padding:24px;text-align:center;margin-bottom:12px}
+.rb-icon{font-size:2.8rem;display:block;margin-bottom:8px}
+.rb-title{font-size:1.2rem;font-weight:700}
+.rb-sub{font-size:.85rem;opacity:.75;margin-top:4px}
+
+/* ── Activities ── */
+.slot-section{margin-bottom:14px}
+.slot-section:last-child{margin-bottom:0}
+.slot-label{font-size:.72rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--muted);margin-bottom:8px}
+.act-row{display:flex;align-items:center;gap:10px;padding:11px 12px;
+  background:var(--bg);border-radius:var(--rs);margin-bottom:6px;
+  cursor:pointer;transition:opacity .2s;user-select:none}
+.act-row:last-child{margin-bottom:0}
+.act-row:active{opacity:.7}
+.act-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);
+  background:var(--card);display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .2s;color:#fff;font-size:.78rem;font-weight:700}
+.act-row.done .act-check{background:var(--success);border-color:var(--success)}
+.act-row.done .act-name{text-decoration:line-through;color:var(--muted)}
+.act-name{flex:1;font-size:.9rem;font-weight:500}
+.slot-empty{text-align:center;color:var(--muted);font-size:.82rem;padding:6px 0}
+
+/* ── Metrics ── */
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric-item{background:var(--bg);border-radius:var(--rs);padding:12px}
+.metric-item.wide{grid-column:1/-1}
+.mlabel{font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
+input[type=number],input[type=text],textarea,select{
+  background:var(--card);border:1.5px solid var(--border);border-radius:8px;
+  padding:8px 10px;font-size:.95rem;color:var(--text);font-family:inherit;
+  outline:none;width:100%;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+input[type=number]:focus,input[type=text]:focus,textarea:focus,select:focus{border-color:var(--primary)}
+.mgoal{font-size:.7rem;color:var(--muted);margin-top:4px}
+.mgoal.met{color:var(--success);font-weight:600}
+.mgoal.miss{color:var(--danger)}
+.pbar{height:4px;background:var(--border);border-radius:10px;overflow:hidden;margin-top:6px}
+.pbar-fill{height:100%;border-radius:10px;transition:width .3s;background:var(--primary)}
+.pbar-fill.cal{background:#f59e0b}
+.macros-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.macro-lbl{font-size:.68rem;color:var(--muted);text-align:center;margin-bottom:4px}
+input.macro{text-align:center}
+.sleep-row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.sleep-hrs{width:70px!important}
+.stars-row{display:flex;gap:3px}
+.star{font-size:1.35rem;cursor:pointer;color:var(--border);transition:color .15s;
+  background:none;border:none;padding:2px;line-height:1;user-select:none}
+.star.lit{color:#f59e0b}
+textarea{min-height:72px;resize:none}
+
+/* ── Progress ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-card{background:var(--card);border-radius:var(--r);padding:16px;
+  box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.stat-val{font-size:1.7rem;font-weight:700;color:var(--primary);line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.prog-day-row{display:flex;align-items:center;gap:10px;padding:10px 0;
+  border-bottom:1px solid var(--border)}
+.prog-day-row:last-child{border-bottom:none}
+.prog-day-name{font-weight:600;font-size:.82rem;width:72px;flex-shrink:0}
+.prog-day-bar{flex:1;height:8px;background:var(--border);border-radius:10px;overflow:hidden}
+.prog-day-pct{font-size:.72rem;color:var(--muted);width:36px;text-align:right;flex-shrink:0}
+
+/* ── Edit ── */
+.edit-day-card{background:var(--card);border-radius:var(--r);margin-bottom:10px;
+  overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.edit-hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;cursor:pointer;transition:background .15s;user-select:none}
+.edit-hdr:active{background:var(--bg)}
+.edit-day-wrap{display:flex;align-items:center;gap:10px}
+.edit-day-name{font-weight:700;font-size:.95rem}
+.badge{font-size:.7rem;padding:2px 8px;border-radius:50px;font-weight:600}
+.badge-rest{background:var(--rest-l);color:var(--rest)}
+.badge-active{background:var(--primary-l);color:var(--primary)}
+.chevron{font-size:.9rem;color:var(--muted);transition:transform .2s;flex-shrink:0}
+.chevron.open{transform:rotate(90deg)}
+.edit-body{border-top:1px solid var(--border);padding:16px;display:none}
+.edit-body.open{display:block}
+.esec-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--muted);margin:14px 0 8px}
+.esec-lbl:first-child{margin-top:0}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:12px}
+.toggle-lbl{font-size:.9rem;font-weight:600}
+.toggle{position:relative;width:44px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.tog-slider{position:absolute;inset:0;background:var(--border);border-radius:26px;cursor:pointer;transition:background .2s}
+.tog-slider:before{content:'';position:absolute;width:20px;height:20px;
+  left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
+.toggle input:checked+.tog-slider{background:var(--primary)}
+.toggle input:checked+.tog-slider:before{transform:translateX(18px)}
+.edit-act-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.edit-act-input{flex:1;padding:8px 10px;font-size:.87rem}
+.btn-del{width:34px;height:34px;border-radius:8px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;
+  background:var(--danger-l);color:var(--danger);transition:all .15s}
+.btn-del:active{background:#fecaca}
+.btn-add-act{background:var(--primary-l);color:var(--primary);border:none;
+  padding:8px 14px;font-size:.82rem;font-weight:700;gap:6px;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;margin-top:4px;transition:all .15s}
+.btn-add-act:active{background:#bfdbfe}
+.goals-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.goal-wrap label{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
+
+/* ── Settings ── */
+.sec-title{font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--muted);padding:8px 4px 6px}
+.set-row{background:var(--card);border-radius:var(--rs);padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:2px;cursor:pointer;transition:background .15s}
+.set-row:active{background:var(--bg)}
+.set-row-lbl{font-size:.9rem;font-weight:500}
+.set-row-sub{font-size:.74rem;color:var(--muted);margin-top:2px}
+.set-arr{color:var(--muted);font-size:.9rem}
+
+/* ── Bottom Nav ── */
+#bottomNav{position:fixed;bottom:0;left:0;right:0;background:var(--card);
+  border-top:1px solid var(--border);display:flex;
+  padding-bottom:var(--safe-b);z-index:100;
+  box-shadow:0 -4px 20px rgba(0,0,0,.06)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:8px 4px;cursor:pointer;color:var(--muted);
+  transition:color .2s;font-size:.65rem;font-weight:600;gap:3px;user-select:none;
+  -webkit-user-select:none}
+.nav-item:active{background:var(--bg)}
+.nav-item.active{color:var(--primary)}
+.nav-icon{font-size:1.35rem;line-height:1}
+
+/* ── Add Activity Sheet ── */
+#actSheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;
+  display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
+#actSheet.open{opacity:1;pointer-events:all}
+#actSheetInner{background:var(--card);border-radius:20px 20px 0 0;
+  padding:20px 20px calc(var(--safe-b) + 20px);width:100%;
+  transform:translateY(100%);transition:transform .3s ease}
+#actSheet.open #actSheetInner{transform:translateY(0)}
+.sheet-title{font-size:1rem;font-weight:700;margin-bottom:14px}
+.sheet-row{display:flex;gap:8px}
+.btn-confirm{flex:1;background:var(--primary);color:#fff;border:none;
+  padding:12px;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer}
+.btn-confirm:active{background:var(--primary-d)}
+.btn-cancel{background:var(--bg);color:var(--text2);border:none;
+  padding:12px 18px;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:calc(var(--navH) + var(--safe-b) + 14px);
+  left:50%;transform:translateX(-50%) translateY(16px);
+  background:#1e293b;color:#fff;padding:10px 20px;border-radius:50px;
+  font-size:.82rem;font-weight:500;opacity:0;transition:all .25s;
+  z-index:9999;pointer-events:none;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="installBanner" class="hidden">
+  <div class="ib-text"><strong>📱 Install App</strong>Add to your home screen for offline use</div>
+  <div class="ib-btns">
+    <button class="btn-ib btn-install" id="installBtn">Install</button>
+    <button class="btn-ib btn-dismiss" id="dismissInstall">✕</button>
+  </div>
+</div>
+
+<div id="app">
+  <div id="appHeader">
+    <div class="hdr-title">🏥 Rehab Planner</div>
+    <div class="hdr-week">
+      <button class="wk-btn" id="prevWk">‹</button>
+      <span id="weekLabel"></span>
+      <button class="wk-btn" id="nextWk">›</button>
+      <button class="btn-today" id="todayBtn">Today</button>
+    </div>
+  </div>
+  <div id="dayTabs"></div>
+  <div id="mainContent"></div>
+  <nav id="bottomNav"></nav>
+</div>
+
+<!-- Add Activity Bottom Sheet -->
+<div id="actSheet">
+  <div id="actSheetInner">
+    <div class="sheet-title">Add Activity</div>
+    <input type="text" id="newActInput" placeholder="e.g. Bike 20min, Stretch…" autocomplete="off">
+    <div class="sheet-row" style="margin-top:12px">
+      <button class="btn-cancel" onclick="closeSheet()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmAddAct()">Add</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ───────────────────────────────────────────
+// CONSTANTS & DEFAULTS
+// ───────────────────────────────────────────
+const SLOTS = ['morning','afternoon','evening'];
+const SLOT_ICONS = {morning:'🌅',afternoon:'☀️',evening:'🌙'};
+const SLOT_LABELS = {morning:'Morning',afternoon:'Afternoon',evening:'Evening'};
+
+const DEFAULT_SCHEDULE = [
+  {day:'Monday',   short:'Mon', morning:[],                       afternoon:[],          evening:[],                  rest:true,  stepGoal:5000, calGoal:1200},
+  {day:'Tuesday',  short:'Tue', morning:['Bike 20min','Mobility'], afternoon:['Mobility'],evening:['Strength'],        rest:false, stepGoal:5000, calGoal:1200},
+  {day:'Wednesday',short:'Wed', morning:['Bike 20min','Mobility'], afternoon:['Bike 20min'],evening:['Swim','Mobility'],rest:false,stepGoal:5000, calGoal:1200},
+  {day:'Thursday', short:'Thu', morning:[],                       afternoon:[],          evening:[],                  rest:true,  stepGoal:7000, calGoal:1200},
+  {day:'Friday',   short:'Fri', morning:['Bike 20min','Mobility'], afternoon:['Strength'],evening:['Swim','Mobility'], rest:false, stepGoal:5000, calGoal:1200},
+  {day:'Saturday', short:'Sat', morning:['Bike','Mobility','Walk'],afternoon:['Bike 20min'],evening:['Bike 20min','Mobility'],rest:false,stepGoal:7000,calGoal:1200},
+  {day:'Sunday',   short:'Sun', morning:['Bike','Mobility','Walk'],afternoon:['Swim'],   evening:['Bike','Mobility'], rest:false, stepGoal:5000, calGoal:1200},
+];
+
+// ───────────────────────────────────────────
+// STATE
+// ───────────────────────────────────────────
+const S = {
+  view: 'schedule',
+  weekOffset: 0,
+  dayIndex: todayIndex(),
+  expandedEditDay: -1,
+};
+
+// ───────────────────────────────────────────
+// UTILITIES
+// ───────────────────────────────────────────
+function todayIndex() {
+  const d = new Date().getDay();
+  return d === 0 ? 6 : d - 1;
+}
+function weekStart(offset = 0) {
+  const now = new Date();
+  const diff = now.getDay() === 0 ? -6 : 1 - now.getDay();
+  const d = new Date(now);
+  d.setDate(now.getDate() + diff + offset * 7);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function dayDate(di, off) {
+  const d = new Date(weekStart(off));
+  d.setDate(d.getDate() + di);
+  return d;
+}
+function sameDay(a, b) {
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+function weekKey(off) {
+  return 'rp_week_' + weekStart(off).toISOString().slice(0,10);
+}
+function weekLabel(off) {
+  const s = weekStart(off), e = new Date(s);
+  e.setDate(s.getDate()+6);
+  const o = {month:'short',day:'numeric'};
+  return `${s.toLocaleDateString('en-US',o)} – ${e.toLocaleDateString('en-US',o)}`;
+}
+
+// ───────────────────────────────────────────
+// STORAGE
+// ───────────────────────────────────────────
+function getSchedule() {
+  try { const s=localStorage.getItem('rp_schedule'); return s ? JSON.parse(s) : deepClone(DEFAULT_SCHEDULE); }
+  catch { return deepClone(DEFAULT_SCHEDULE); }
+}
+function saveSchedule(s) { localStorage.setItem('rp_schedule', JSON.stringify(s)); }
+function getWeekData(off) {
+  try { const s=localStorage.getItem(weekKey(off)); return s ? JSON.parse(s) : {}; }
+  catch { return {}; }
+}
+function saveWeekData(off, d) { localStorage.setItem(weekKey(off), JSON.stringify(d)); }
+function getDayData(off, name) { return getWeekData(off)[name] || {}; }
+function patchDay(off, name, patch) {
+  const w=getWeekData(off); w[name]={...(w[name]||{}),...patch}; saveWeekData(off,w);
+}
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+// ───────────────────────────────────────────
+// COMPLETION
+// ───────────────────────────────────────────
+function actKey(di, slot, ai) { return `${di}_${slot}_${ai}`; }
+function isDone(dd, di, slot, ai) { return !!(dd.activities && dd.activities[actKey(di,slot,ai)]); }
+function dayCompletion(di) {
+  const sch = getSchedule(), day = sch[di];
+  if (day.rest) return {total:0, done:0, pct:100};
+  const dd = getDayData(S.weekOffset, day.day);
+  let total=0, done=0;
+  SLOTS.forEach(s => (day[s]||[]).forEach((_,ai) => { total++; if(isDone(dd,di,s,ai)) done++; }));
+  return {total, done, pct: total===0 ? 100 : Math.round(done/total*100)};
+}
+
+// ───────────────────────────────────────────
+// ACTIVITY TOGGLE
+// ───────────────────────────────────────────
+function toggleAct(di, slot, ai) {
+  const sch=getSchedule(), name=sch[di].day;
+  const dd=getDayData(S.weekOffset,name);
+  const acts={...(dd.activities||{})};
+  acts[actKey(di,slot,ai)] = !acts[actKey(di,slot,ai)];
+  patchDay(S.weekOffset, name, {activities:acts});
+  renderSchedule();
+}
+
+// ───────────────────────────────────────────
+// METRIC HANDLERS (no full re-render)
+// ───────────────────────────────────────────
+function onMetric(di, field, val, el) {
+  const sch=getSchedule(), name=sch[di].day;
+  patchDay(S.weekOffset, name, {[field]:val});
+  if (field==='steps' || field==='calories') {
+    const goal = field==='steps' ? sch[di].stepGoal : sch[di].calGoal;
+    const pct = val ? Math.min(100, Math.round(parseInt(val)/goal*100)) : 0;
+    const met = val && parseInt(val) >= goal;
+    const wrap = el.closest('.metric-item');
+    if (wrap) {
+      const bar = wrap.querySelector('.pbar-fill');
+      if (bar) bar.style.width = pct+'%';
+      const ind = wrap.querySelector('.mgoal');
+      if (ind) {
+        ind.className = 'mgoal'+(met?' met':(val?' miss':''));
+        ind.textContent = `Goal: ${goal.toLocaleString()}${met?' ✓':''}`;
+      }
+    }
+  }
+}
+function onSleep(di, rating) {
+  const sch=getSchedule(), name=sch[di].day;
+  const dd=getDayData(S.weekOffset,name);
+  const newR = dd.sleep===rating ? 0 : rating;
+  patchDay(S.weekOffset, name, {sleep:newR});
+  document.querySelectorAll('.star').forEach((s,i) => s.classList.toggle('lit', i<newR));
+}
+
+// ───────────────────────────────────────────
+// RENDER: HEADER & TABS
+// ───────────────────────────────────────────
+function renderHeader() {
+  document.getElementById('weekLabel').textContent = weekLabel(S.weekOffset);
+}
+function renderTabs() {
+  const tabs = document.getElementById('dayTabs');
+  const sch = getSchedule(), today = todayIndex(), now = new Date();
+  tabs.innerHTML = sch.map((day,i) => {
+    const date = dayDate(i, S.weekOffset);
+    const isToday = S.weekOffset===0 && i===today && sameDay(date,now);
+    const hasData = Object.keys(getDayData(S.weekOffset,day.day)).length > 0;
+    return `<div class="dtab${i===S.dayIndex?' active':''}${isToday?' today':''}${hasData?' has-data':''}"
+      onclick="setDay(${i})">
+      <span class="dtab-name">${day.short}</span>
+      <span class="dtab-num">${date.getDate()}</span>
+      <span class="dtab-dot"></span>
+    </div>`;
+  }).join('');
+}
+
+// ───────────────────────────────────────────
+// RENDER: SCHEDULE (day view)
+// ───────────────────────────────────────────
+function renderSchedule() {
+  const sch=getSchedule(), day=sch[S.dayIndex];
+  const date=dayDate(S.dayIndex,S.weekOffset);
+  const dd=getDayData(S.weekOffset,day.day);
+  const {done,total,pct}=dayCompletion(S.dayIndex);
+  const isToday=S.weekOffset===0&&sameDay(date,new Date());
+  const dateStr=date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const r=22, circ=2*Math.PI*r, dash=(circ*pct/100).toFixed(1);
+
+  let h = `<div class="day-card">
+    <div class="dc-info">
+      <h2>${day.day}${isToday?' <span style="font-size:.72rem;opacity:.75;font-weight:400">Today</span>':''}</h2>
+      <div class="dc-sub">${dateStr}</div>
+      <div class="dc-acts">${day.rest?'Rest & Recovery':''+done+' of '+total+' activities done'}</div>
+    </div>
+    <div class="circ">
+      <svg viewBox="0 0 56 56"><circle class="circ-track" cx="28" cy="28" r="${r}"/>
+      <circle class="circ-fill" cx="28" cy="28" r="${r}"
+        stroke-dasharray="${dash} ${circ.toFixed(1)}" stroke-dashoffset="0"/></svg>
+      <div class="circ-pct">${pct}%</div>
+    </div>
+  </div>`;
+
+  if (day.rest) {
+    h += `<div class="rest-banner">
+      <span class="rb-icon">🛌</span>
+      <div class="rb-title">Rest Day</div>
+      <div class="rb-sub">Recovery is part of the plan</div>
+    </div>`;
+  } else {
+    h += `<div class="card"><div class="card-header"><div class="card-title">🏋️ Training</div></div>`;
+    SLOTS.forEach(slot => {
+      const acts=day[slot]||[];
+      if (!acts.length) return;
+      h += `<div class="slot-section"><div class="slot-label">${SLOT_ICONS[slot]} ${SLOT_LABELS[slot]}</div>`;
+      acts.forEach((act,ai) => {
+        const done=isDone(dd,S.dayIndex,slot,ai);
+        h += `<div class="act-row${done?' done':''}" onclick="toggleAct(${S.dayIndex},'${slot}',${ai})">
+          <div class="act-check">${done?'✓':''}</div>
+          <span class="act-name">${act}</span>
+        </div>`;
+      });
+      h += `</div>`;
+    });
+    h += `</div>`;
+  }
+
+  // Metrics
+  const steps=dd.steps||'', cal=dd.calories||'', carbs=dd.carbs||'', prot=dd.protein||'',
+        fat=dd.fat||'', sleepHrs=dd.sleepHrs||'', sleepQ=dd.sleep||0, notes=dd.notes||'';
+  const sPct=steps?Math.min(100,Math.round(parseInt(steps)/day.stepGoal*100)):0;
+  const cPct=cal?Math.min(100,Math.round(parseInt(cal)/day.calGoal*100)):0;
+  const sMet=steps&&parseInt(steps)>=day.stepGoal, cMet=cal&&parseInt(cal)>=day.calGoal;
+
+  let stars='';
+  for(let s=1;s<=5;s++) stars+=`<button class="star${s<=sleepQ?' lit':''}" onclick="onSleep(${S.dayIndex},${s})">★</button>`;
+
+  h += `<div class="card"><div class="card-header"><div class="card-title">📊 Daily Metrics</div></div>
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <div class="mlabel">👟 Steps</div>
+        <input type="number" value="${steps}" placeholder="0" min="0" inputmode="numeric"
+          oninput="onMetric(${S.dayIndex},'steps',this.value,this)">
+        <div class="mgoal${sMet?' met':(steps?' miss':'')}">Goal: ${day.stepGoal.toLocaleString()}${sMet?' ✓':''}</div>
+        <div class="pbar"><div class="pbar-fill" style="width:${sPct}%"></div></div>
+      </div>
+      <div class="metric-item">
+        <div class="mlabel">🔥 Calories</div>
+        <input type="number" value="${cal}" placeholder="0" min="0" inputmode="numeric"
+          oninput="onMetric(${S.dayIndex},'calories',this.value,this)">
+        <div class="mgoal${cMet?' met':(cal?' miss':'')}">Goal: ${day.calGoal.toLocaleString()}${cMet?' ✓':''}</div>
+        <div class="pbar"><div class="pbar-fill cal" style="width:${cPct}%"></div></div>
+      </div>
+    </div>
+    <div class="metric-item wide" style="margin-top:10px">
+      <div class="mlabel">🥗 Macros (g)</div>
+      <div class="macros-row">
+        <div><div class="macro-lbl">Carbs</div>
+          <input class="macro" type="number" value="${carbs}" placeholder="0" min="0" inputmode="numeric"
+            oninput="onMetric(${S.dayIndex},'carbs',this.value,this)"></div>
+        <div><div class="macro-lbl">Protein</div>
+          <input class="macro" type="number" value="${prot}" placeholder="0" min="0" inputmode="numeric"
+            oninput="onMetric(${S.dayIndex},'protein',this.value,this)"></div>
+        <div><div class="macro-lbl">Fat</div>
+          <input class="macro" type="number" value="${fat}" placeholder="0" min="0" inputmode="numeric"
+            oninput="onMetric(${S.dayIndex},'fat',this.value,this)"></div>
+      </div>
+    </div>
+    <div class="metric-item wide" style="margin-top:10px">
+      <div class="mlabel">😴 Sleep</div>
+      <div class="sleep-row">
+        <input class="sleep-hrs" type="number" value="${sleepHrs}" placeholder="hrs" min="0" max="24" inputmode="decimal"
+          oninput="onMetric(${S.dayIndex},'sleepHrs',this.value,this)">
+        <span style="font-size:.8rem;color:var(--muted)">hours</span>
+      </div>
+      <div class="stars-row">${stars}</div>
+    </div>
+    <div class="metric-item wide" style="margin-top:10px">
+      <div class="mlabel">📝 Notes</div>
+      <textarea placeholder="How did today go? Pain levels, energy, notes…"
+        oninput="onMetric(${S.dayIndex},'notes',this.value,this)">${notes}</textarea>
+    </div>
+  </div>`;
+
+  document.getElementById('mainContent').innerHTML = h;
+}
+
+// ───────────────────────────────────────────
+// RENDER: PROGRESS
+// ───────────────────────────────────────────
+function renderProgress() {
+  const sch=getSchedule(), wk=getWeekData(S.weekOffset);
+  let tActs=0,dActs=0,tSteps=0,sDays=0,tCal=0,cDays=0;
+  sch.forEach((day,di) => {
+    const dd=wk[day.day]||{};
+    if (!day.rest) {
+      SLOTS.forEach(s => (day[s]||[]).forEach((_,ai)=>{tActs++;if(isDone(dd,di,s,ai))dActs++;}));
+    }
+    if (dd.steps&&parseInt(dd.steps)>0){sDays++;tSteps+=parseInt(dd.steps);}
+    if (dd.calories&&parseInt(dd.calories)>0){cDays++;tCal+=parseInt(dd.calories);}
+  });
+  const wPct=tActs?Math.round(dActs/tActs*100):0;
+  const avgS=sDays?Math.round(tSteps/sDays):0, avgC=cDays?Math.round(tCal/cDays):0;
+
+  const rows=sch.map((day,di)=>{
+    const{pct}=dayCompletion(di);
+    const bg=day.rest?'var(--rest)':'var(--primary)';
+    return `<div class="prog-day-row">
+      <div class="prog-day-name">${day.short} ${dayDate(di,S.weekOffset).getDate()}</div>
+      <div class="prog-day-bar"><div class="pbar-fill" style="width:${pct}%;background:${bg}"></div></div>
+      <div class="prog-day-pct">${day.rest?'REST':pct+'%'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val">${wPct}%</div><div class="stat-lbl">Week Complete</div></div>
+      <div class="stat-card"><div class="stat-val">${dActs}/${tActs}</div><div class="stat-lbl">Activities Done</div></div>
+      <div class="stat-card"><div class="stat-val">${avgS>0?avgS.toLocaleString():'—'}</div><div class="stat-lbl">Avg Steps/Day</div></div>
+      <div class="stat-card"><div class="stat-val">${avgC>0?avgC.toLocaleString():'—'}</div><div class="stat-lbl">Avg Calories/Day</div></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">📅 Daily Breakdown</div></div>${rows}</div>`;
+}
+
+// ───────────────────────────────────────────
+// RENDER: EDIT
+// ───────────────────────────────────────────
+function countActs(day) { return SLOTS.reduce((n,s)=>n+(day[s]||[]).length,0); }
+
+function renderEdit() {
+  const sch=getSchedule();
+  let h='<div class="card" style="background:var(--primary-l);border:none;padding:12px 16px;margin-bottom:12px"><div style="font-size:.85rem;color:var(--primary);font-weight:600">✏️ Tap a day to edit its activities and goals</div></div>';
+  h += sch.map((day,di) => {
+    const open = S.expandedEditDay===di;
+    let body='';
+    if (open) {
+      body += `<div class="toggle-row"><span class="toggle-lbl">Rest Day</span>
+        <label class="toggle"><input type="checkbox" ${day.rest?'checked':''} onchange="toggleRest(${di})">
+        <span class="tog-slider"></span></label></div>`;
+      if (!day.rest) {
+        SLOTS.forEach(slot => {
+          body += `<div class="esec-lbl">${SLOT_ICONS[slot]} ${SLOT_LABELS[slot]}</div>`;
+          (day[slot]||[]).forEach((act,ai) => {
+            body += `<div class="edit-act-row">
+              <input class="edit-act-input" type="text" value="${escHtml(act)}"
+                onchange="renameAct(${di},'${slot}',${ai},this.value)" placeholder="Activity name">
+              <button class="btn-del" onclick="deleteAct(${di},'${slot}',${ai})">✕</button>
+            </div>`;
+          });
+          body += `<button class="btn-add-act" onclick="openSheet(${di},'${slot}')">＋ Add Activity</button>`;
+        });
+        body += `<div class="goals-row">
+          <div class="goal-wrap"><label>Step Goal</label>
+            <input type="number" value="${day.stepGoal}" min="0" inputmode="numeric"
+              onchange="updateGoal(${di},'stepGoal',this.value)"></div>
+          <div class="goal-wrap"><label>Calorie Goal</label>
+            <input type="number" value="${day.calGoal}" min="0" inputmode="numeric"
+              onchange="updateGoal(${di},'calGoal',this.value)"></div>
+        </div>`;
+      }
+    }
+    return `<div class="edit-day-card">
+      <div class="edit-hdr" onclick="toggleEditDay(${di})">
+        <div class="edit-day-wrap">
+          <span class="edit-day-name">${day.day}</span>
+          <span class="badge ${day.rest?'badge-rest':'badge-active'}">${day.rest?'REST':countActs(day)+' activities'}</span>
+        </div>
+        <span class="chevron${open?' open':''}">›</span>
+      </div>
+      ${open?`<div class="edit-body open">${body}</div>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('mainContent').innerHTML = h;
+}
+
+function toggleEditDay(di) { S.expandedEditDay = S.expandedEditDay===di ? -1 : di; renderEdit(); }
+function toggleRest(di) {
+  const sch=getSchedule(); sch[di].rest=!sch[di].rest; saveSchedule(sch); renderEdit();
+}
+function renameAct(di, slot, ai, val) {
+  const sch=getSchedule(); sch[di][slot][ai]=val; saveSchedule(sch);
+}
+function deleteAct(di, slot, ai) {
+  const sch=getSchedule(); sch[di][slot].splice(ai,1); saveSchedule(sch); renderEdit();
+}
+function updateGoal(di, field, val) {
+  const sch=getSchedule(); sch[di][field]=parseInt(val)||0; saveSchedule(sch);
+}
+
+// ── Add Activity Sheet ──
+let sheetTarget = null;
+function openSheet(di, slot) {
+  sheetTarget={di,slot};
+  document.getElementById('newActInput').value='';
+  document.getElementById('actSheet').classList.add('open');
+  setTimeout(()=>document.getElementById('newActInput').focus(),300);
+}
+function closeSheet() { document.getElementById('actSheet').classList.remove('open'); sheetTarget=null; }
+function confirmAddAct() {
+  const val=document.getElementById('newActInput').value.trim();
+  if (!val||!sheetTarget) return;
+  const sch=getSchedule();
+  if (!Array.isArray(sch[sheetTarget.di][sheetTarget.slot])) sch[sheetTarget.di][sheetTarget.slot]=[];
+  sch[sheetTarget.di][sheetTarget.slot].push(val);
+  saveSchedule(sch); closeSheet(); renderEdit(); toast('Activity added ✓');
+}
+document.getElementById('newActInput').addEventListener('keydown', e => { if(e.key==='Enter') confirmAddAct(); });
+document.getElementById('actSheet').addEventListener('click', e => { if(e.target===document.getElementById('actSheet')) closeSheet(); });
+
+// ───────────────────────────────────────────
+// RENDER: SETTINGS
+// ───────────────────────────────────────────
+function renderSettings() {
+  const dark = document.documentElement.dataset.theme==='dark';
+  document.getElementById('mainContent').innerHTML = `
+    <div class="sec-title">Appearance</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="set-row">
+        <div><div class="set-row-lbl">Dark Mode</div><div class="set-row-sub">Easy on the eyes</div></div>
+        <label class="toggle"><input type="checkbox" ${dark?'checked':''} onchange="toggleDark()"><span class="tog-slider"></span></label>
+      </div>
+    </div>
+    <div class="sec-title" style="margin-top:16px">Data</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="set-row" onclick="exportCSV()">
+        <div><div class="set-row-lbl">📊 Export to CSV</div><div class="set-row-sub">Download this week's data</div></div>
+        <span class="set-arr">›</span>
+      </div>
+      <div class="set-row" onclick="resetSchedule()" style="border-top:1px solid var(--border)">
+        <div><div class="set-row-lbl">🔄 Reset to Default Schedule</div><div class="set-row-sub">Restore original rehab plan</div></div>
+        <span class="set-arr">›</span>
+      </div>
+      <div class="set-row" onclick="clearWeek()" style="border-top:1px solid var(--border)">
+        <div><div class="set-row-lbl">🗑️ Clear This Week's Data</div><div class="set-row-sub">Remove tracking entries</div></div>
+        <span class="set-arr">›</span>
+      </div>
+    </div>
+    <div class="sec-title" style="margin-top:16px">📱 Install on Phone</div>
+    <div class="card">
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text2)">
+        <strong style="display:block;color:var(--text);margin-bottom:6px">Add to Home Screen</strong>
+        <strong>iPhone / iPad (Safari):</strong><br>
+        Tap <strong>Share ⬆</strong> → scroll down → <strong>"Add to Home Screen"</strong><br><br>
+        <strong>Android (Chrome):</strong><br>
+        Tap <strong>menu ⋮</strong> → <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong><br><br>
+        <span style="color:var(--muted);font-size:.8rem">Works offline once installed. All data stays on your device.</span>
+      </div>
+    </div>
+    <div class="sec-title" style="margin-top:16px">About</div>
+    <div class="card">
+      <div style="font-size:.82rem;color:var(--text2);line-height:1.6">
+        <strong style="color:var(--text)">Rehab Schedule Planner</strong><br>
+        Based on your personalized rehab program.<br>
+        All data is stored locally on your device — private &amp; offline.
+      </div>
+    </div>`;
+}
+
+function toggleDark() {
+  const now=document.documentElement.dataset.theme==='dark';
+  document.documentElement.dataset.theme=now?'light':'dark';
+  localStorage.setItem('rp_theme',now?'light':'dark');
+  document.getElementById('themeColor').content=now?'#2563eb':'#0f172a';
+  renderSettings();
+}
+function resetSchedule() {
+  if (!confirm('Reset to the default rehab schedule? Tracking data will be kept.')) return;
+  saveSchedule(deepClone(DEFAULT_SCHEDULE));
+  S.expandedEditDay=-1; renderEdit(); toast('Schedule reset ✓');
+}
+function clearWeek() {
+  if (!confirm('Clear all tracking data for this week?')) return;
+  localStorage.removeItem(weekKey(S.weekOffset));
+  renderMain(); toast('Week cleared');
+}
+function exportCSV() {
+  const sch=getSchedule(), wk=getWeekData(S.weekOffset);
+  const rows=[['Day','Morning','Afternoon','Evening','Steps','Step Goal','Calories','Cal Goal','Carbs','Protein','Fat','Sleep Hrs','Sleep Quality','Notes']];
+  sch.forEach((day,di)=>{
+    const dd=wk[day.day]||{};
+    const actStr=slot=>(day[slot]||[]).map((a,ai)=>(isDone(dd,di,slot,ai)?'✓ ':'')+a).join('; ');
+    rows.push([day.day,day.rest?'REST':actStr('morning'),day.rest?'':actStr('afternoon'),
+      day.rest?'':actStr('evening'),dd.steps||'',day.stepGoal,dd.calories||'',day.calGoal,
+      dd.carbs||'',dd.protein||'',dd.fat||'',dd.sleepHrs||'',
+      dd.sleep?'★'.repeat(dd.sleep):'', (dd.notes||'').replace(/\n/g,' ')]);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a=Object.assign(document.createElement('a'),{
+    href:URL.createObjectURL(new Blob([csv],{type:'text/csv'})),
+    download:`rehab_${weekStart(S.weekOffset).toISOString().slice(0,10)}.csv`
+  });
+  a.click(); toast('CSV exported 📊');
+}
+
+// ───────────────────────────────────────────
+// BOTTOM NAV & ROUTING
+// ───────────────────────────────────────────
+const NAV_ITEMS = [
+  {id:'schedule',icon:'📅',label:'Schedule'},
+  {id:'progress',icon:'📊',label:'Progress'},
+  {id:'edit',     icon:'✏️', label:'Edit Plan'},
+  {id:'settings', icon:'⚙️', label:'Settings'},
+];
+function renderNav() {
+  document.getElementById('bottomNav').innerHTML = NAV_ITEMS.map(n=>
+    `<div class="nav-item${S.view===n.id?' active':''}" onclick="setView('${n.id}')">
+      <span class="nav-icon">${n.icon}</span><span>${n.label}</span>
+    </div>`
+  ).join('');
+}
+function setView(v) { S.view=v; renderNav(); renderMain(); }
+function setDay(i) { S.dayIndex=i; S.view='schedule'; renderNav(); renderTabs(); renderSchedule(); }
+function renderMain() {
+  if (S.view==='schedule') renderSchedule();
+  else if (S.view==='progress') renderProgress();
+  else if (S.view==='edit') renderEdit();
+  else renderSettings();
+}
+
+// ───────────────────────────────────────────
+// TOAST
+// ───────────────────────────────────────────
+let _toastTimer;
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ───────────────────────────────────────────
+// HELPERS
+// ───────────────────────────────────────────
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// ───────────────────────────────────────────
+// INIT
+// ───────────────────────────────────────────
+(function init() {
+  const theme = localStorage.getItem('rp_theme')||'light';
+  document.documentElement.dataset.theme = theme;
+  document.getElementById('themeColor').content = theme==='dark'?'#0f172a':'#2563eb';
+
+  renderHeader();
+  renderTabs();
+  renderMain();
+  renderNav();
+
+  document.getElementById('prevWk').addEventListener('click',()=>{ S.weekOffset--; renderHeader(); renderTabs(); renderMain(); });
+  document.getElementById('nextWk').addEventListener('click',()=>{ S.weekOffset++; renderHeader(); renderTabs(); renderMain(); });
+  document.getElementById('todayBtn').addEventListener('click',()=>{ S.weekOffset=0; S.dayIndex=todayIndex(); S.view='schedule'; renderHeader(); renderTabs(); renderMain(); renderNav(); });
+
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+
+  // PWA Install prompt
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredPrompt=e;
+    if (!localStorage.getItem('rp_install_dismissed'))
+      document.getElementById('installBanner').classList.remove('hidden');
+  });
+  document.getElementById('installBtn').addEventListener('click', async ()=>{
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const {outcome}=await deferredPrompt.userChoice;
+    if (outcome==='accepted') document.getElementById('installBanner').classList.add('hidden');
+    deferredPrompt=null;
+  });
+  document.getElementById('dismissInstall').addEventListener('click',()=>{
+    document.getElementById('installBanner').classList.add('hidden');
+    localStorage.setItem('rp_install_dismissed','1');
+  });
+})();
+</script>
+</body>
+</html>
