@@ -1,0 +1,60 @@
+╔══════════════════════════════════════════════════════════════╗
+║              REHAB PLANNER — PHONE INSTALL GUIDE            ║
+╚══════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OPTION 1 — USE ON YOUR PHONE VIA WIFI (Recommended)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: Start the server on your PC
+  → Double-click "start_server.bat" in this folder
+  → Note the IP address shown (e.g. 192.168.1.10)
+
+STEP 2: Open on your phone
+  → Make sure phone & PC are on the same WiFi
+  → Open your phone's browser
+  → Go to: http://YOUR-PC-IP:8080
+    (example: http://192.168.1.10:8080)
+
+STEP 3: Install to Home Screen
+  iPhone/iPad (Safari):
+    → Tap the Share button (⬆ box icon at bottom)
+    → Scroll down → tap "Add to Home Screen"
+    → Tap "Add"
+
+  Android (Chrome):
+    → Tap menu (⋮ three dots, top right)
+    → Tap "Add to Home Screen" or "Install App"
+    → Tap "Add"
+
+✓ After installing, the app works OFFLINE — no server needed!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OPTION 2 — HOST FREE ONLINE (Access anywhere, any WiFi)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Using Netlify Drop (free, no account needed):
+  1. Go to https://app.netlify.com/drop
+  2. Drag the entire "RehabPlanner" folder onto the page
+  3. You'll get a free URL like: https://random-name.netlify.app
+  4. Open that URL on your phone and install to Home Screen
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OPTION 3 — OPEN DIRECTLY IN BROWSER (Desktop only)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  → Double-click index.html to open in your browser
+  → Note: PWA install not available without a server
+  → All features still work; data saved in browser
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+APP FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 Schedule  — Check off daily activities (Mon–Sun)
+📊 Progress  — Weekly completion stats & charts
+✏️ Edit Plan  — Add/remove exercises, toggle rest days,
+                change step & calorie goals
+⚙️ Settings  — Dark mode, CSV export, reset schedule
+
+All data is stored locally on your device. Private & offline.
